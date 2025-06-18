@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from models.user import session, InputUser, User , InputLogin , UserDetail, Materia,ImputMaterias,Payment,ImputPayment,Career,Imputcareer#,GetMateriaByID
+from models.user import session, InputUser, User,Type ,Imputtype, InputLogin , UserDetail ,Payment,ImputPayment,Career,Imputcareer ,UsuarioXcarrera, ImputUsuarioxcarrera#,GetMateriaByID
 from fastapi.responses import JSONResponse
 from psycopg2 import IntegrityError
 from sqlalchemy.orm import (
@@ -11,83 +11,44 @@ userDetail = APIRouter()
 materia = APIRouter()
 career = APIRouter()
 payment = APIRouter()
+type = APIRouter()
 
-# region carreras 
+# region login
 
-@career.post("/Careers/new")
-def crear_Career (carerr: Imputcareer):
-    try:
-        careernueva = Career(carerr.name)
-        session.add(careernueva)
-        session.commit()
-        return "carrera creada"
-    except  Exception as e:
-       print("Error inesperado:", e)
-       return JSONResponse(
-           status_code=500, content={"detail": "Error al agregar usuario"}
-       )
-    finally: session.close()
-    
-@payment.post("/payments/new")
-def confeccionar_pago (payment: ImputPayment):
-    try:
-        paynew= Payment(payment.id_career , payment.id_user,payment.amount, payment.afect_mount)
-        session.add(paynew)
-        session.commit()
-        return "carrera creada"
-    except  Exception as e:
-       print("Error inesperado:", e)
-       return JSONResponse(
-           status_code=500, content={"detail": "Error al agregar usuario"}
-       )
-    finally: session.close()
-
-@career.get("/career/all") 
-def obtener_career() : 
-    try:      
-       res = session.query(Career).all
-       return res
-    except  Exception as e:
-       print("Error inesperado:", e)
-       return JSONResponse(
-           status_code=500, content={"detail": "Error al agregar usuario"}
-       )
-    finally: session.close() 
-
-@payment.get("/payment/all") 
-def obtener_pagos() : 
-    try:      
-       res = session.query(Payment).all
-       return res
-    except  Exception as e:
-       print("Error inesperado:", e)
-       return JSONResponse(
-           status_code=500, content={"detail": "Error al agregar usuario"}
-       )
-    finally: session.close() 
-
-
-
-
-
+@user.post("/users/login")
+def login_user(us: InputLogin):
+   try:
+      user = session.query(User).options(joinedload(User.relaUserdetail).joinedload(UserDetail.relaUserdetailType), joinedload(User.relaUserdetail).joinedload(UserDetail.relaUserdetailusuarioxcarrera).joinedload(UsuarioXcarrera.relausuariosxcarrerascareer)).filter(User.username == us.username).first()
       
+      if user and user.password == us.password:
+           return {"status": "success",
+                   "token": "qwelkrlñqwkrlñqwkerñlkjwn",
+                   "user": user ,
+                   "message":"User logged in successfully!"}
+      else:
+           return {"message": "Invald username or password"}
+   except Exception as ex:
+       print("Error ---->> ", ex)
+   finally:
+       session.close()
+# endregion
+# region new 
 
 
-# endregion 
-
-
-# region user
-@user.post("/users/new")
+@user.post("/user/new")
 def crear_usuario(user: InputUser):
    try:
        # Si el usuario cumple con la validación, y no hay errores, lo agregamos.
        if validate_username(user.username): 
-           if validate_email(user.email):
-             usuNuevo = User(user.username, user.password,user.email)
-             usuDetailNuevo = UserDetail (user.dni,user.firstname,user.lastname,user.type   )
+           if validate_email(user.email):            
+             usuNuevo = User(user.username, user.password)
+             usuDetailNuevo = UserDetail (user.dni,user.firstname,user.lastname,user.email,user.type)             
+             usuarioxcarreranuevo = UsuarioXcarrera(user.id_carrera , user.fecha_inicio)
+             usuDetailNuevo.relaUserdetailusuarioxcarrera.append(usuarioxcarreranuevo)
              usuNuevo.relaUserdetail=usuDetailNuevo
              session.add(usuNuevo)
              session.commit()
+            
              return "usuario agregado"
            else:
                return"el mail ya existe"
@@ -112,23 +73,77 @@ def crear_usuario(user: InputUser):
        )
    finally: session.close()
 
-@user.post("/users/login")
-def login_user(us: InputLogin):
-   try:
-       user = session.query(User).filter(User.username == us.username).first()
-       if user and user.password == us.password:
-           return {"status": "success",
-                   "token": "qwelkrlñqwkrlñqwkerñlkjwn",
-                   "user": user.relaUserdetail,
-                   "message":"User logged in successfully!"}
 
-       else:
-           return {"message": "Invald username or password"}
-   except Exception as ex:
-       print("Error ---->> ", ex)
-   finally:
-       session.close()
+@type.post("/type/new")
+def crear_type(type :Imputtype ):
+    try:
+        nuevotype=Type(type.type)
+        session.add(nuevotype)
+        session.commit()
+        return "type creado "
+    except Exception as e:
+        print("error inesperado:", e)
+        return JSONResponse(
+           status_code=500, content={"detail": "Error al agregar usuario"}
+       )
+    finally: session.close()
 
+@career.post("/Careers/new")
+def crear_Career (carerr: Imputcareer):
+    try:
+        careernueva = Career(carerr.name, carerr.costo_mensual, carerr.duracion_meses)
+        session.add(careernueva)
+        session.commit()
+        return "carrera creada"
+    except  Exception as e:
+       print("Error inesperado:", e)
+       return JSONResponse(
+           status_code=500, content={"detail": "Error al agregar usuario"}
+       )
+    finally: session.close()
+    
+@payment.post("/payments/new")
+def confeccionar_pago (payment: ImputPayment):
+    try:
+        paynew= Payment(payment.id_usuarioxcarrera, payment.amount, payment.afect_mount)
+        session.add(paynew)
+        session.commit()
+        return "pago realizado"
+    except  Exception as e:
+       print("Error inesperado:", e)
+       return JSONResponse(
+           status_code=500, content={"detail": "Error al agregar usuario"}
+       )
+    finally: session.close()
+
+
+
+# endregion 
+
+
+# region get
+@payment.get("/payment/all") 
+def obtener_pagos() : 
+    try:      
+       res = session.query(Payment).all
+       return res
+    except  Exception as e:
+       print("Error inesperado:", e)
+       return JSONResponse(
+           status_code=500, content={"detail": "Error al agregar usuario"}
+       )
+    finally: session.close() 
+@career.get("/career/all") 
+def obtener_career() : 
+    try:      
+       res = session.query(Career).all
+       return res
+    except  Exception as e:
+       print("Error inesperado:", e)
+       return JSONResponse(
+           status_code=500, content={"detail": "Error al agregar usuario"}
+       )
+    finally: session.close()
 
 @user.get("/users/all")
 def obtener_usuarios():
@@ -141,65 +156,15 @@ def obtener_usuarios():
            status_code=500, content={"detail": "Error al obtener usuarios"}
        )
    
-# login user que trae las carreras de los alumnos
-@user.post("/users/loginUser")
-def login_post(user: InputLogin):
-    try:
-        usu = User(user.username, user.password ,"")
-        res = session.query(User).options(joinedload(User.relaUserdetail)).filter(User.username == usu.username).first()
-        if res.password == usu.password:
-            print("usuario correcto")
-            return res
-        else:
-            return "as"
-    except Exception as e:
-        print(e)
-
 
 
 # endregion
 
-# region carrera
-"""@materia.get("/materia/all")
-def obtener_materias():
-    
-    try:
-        materias = session.query(Materia).all()
-
-        return materias      
-    except Exception as e:
-     print("Error inesperado:", e)
-    return JSONResponse(
-           status_code=500, content={"detail": "Error al leer todas las materias"}
-       )
+# region put
+"""
 
 
-
-@materia.post("/materia/new")
-def nueva_carrera(materia: ImputMaterias):
-    try:
-        MateriaNueva=Materia(materia.name,materia.status,materia.ID_User)
-        session.add(MateriaNueva)
-        session.commit()
-        return "materia agregada"
-    except Exception as e:
-     print("Error inesperado:", e)
-    return JSONResponse(
-           status_code=500, content={"detail": "Error al agregar materia"}
-       )
-
-
-@materia.post("/materia/con/id_user")
-def obtener_materia_con_ID_User( ID : GetMateriaByID):
-
-    try:
-
-        materias_usuario = session.query(Materia).filter(Materia.Id_User == ID.ID_User).all()
-        print("lectura exitosa")
-        return materias_usuario    
-    except Exception as e:
-        print(e)
-    """
+"""
     
 # endregion
 
@@ -216,7 +181,7 @@ def validate_username(value):
    
 
 def validate_email(value):
-   existing_email = session.query(User).filter(User.email == value).first()
+   existing_email = session.query(UserDetail).filter(UserDetail.email == value).first()
    session.close()
    if existing_email:
        ##raise ValueError("Username already exists")

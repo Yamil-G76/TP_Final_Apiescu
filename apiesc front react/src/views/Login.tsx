@@ -125,7 +125,7 @@ function loginProcess(dataObject: LoginProcessResponse) {
 </form>
 
         <div className="text-center mt-3" style={forgotPasswordStyle}>
-          ¿Olvidaste tu contraseña?
+         
         </div>
       </div>
     </div>
