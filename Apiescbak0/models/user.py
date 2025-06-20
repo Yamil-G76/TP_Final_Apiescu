@@ -96,7 +96,7 @@ class UsuarioXcarrera (Base):
  
 
    Userdetail=relationship("UserDetail", uselist=False, back_populates="Usuario_carrera")
-   Carrera = relationship("Carrera",uselist=False, back_populates="Usuariosxcarrera")
+   Carrera = relationship("Career",uselist=False, back_populates="Usuariosxcarrera")
    Payment =relationship("Payment" , back_populates="Usuarioxcarrera")
 
    def __init__(self,id_carrera,id_userdetail =None):
