@@ -11,15 +11,10 @@ console.log(user)
 
 function logout (){
  localStorage.removeItem("user")
-localStorage.removeItem("token")
+ localStorage.removeItem("token")
  navigate("/login")
   }
 
-
-      
-
-
- 
   return (
     <div style={pageWrapperStyle}>
       {/* Espacio para encabezado */}

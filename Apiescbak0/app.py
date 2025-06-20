@@ -9,6 +9,7 @@ from Rutas.users import career
 from Rutas.users import payment 
 from Rutas.users import type
 
+
 from fastapi.middleware.cors import CORSMiddleware
 apiescu = FastAPI () 
 

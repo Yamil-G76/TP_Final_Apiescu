@@ -18,12 +18,23 @@ type = APIRouter()
 @user.post("/users/login")
 def login_user(us: InputLogin):
    try:
-      user = session.query(User).options(joinedload(User.relaUserdetail).joinedload(UserDetail.relaUserdetailType), joinedload(User.relaUserdetail).joinedload(UserDetail.relaUserdetailusuarioxcarrera).joinedload(UsuarioXcarrera.relausuariosxcarrerascareer)).filter(User.username == us.username).first()
+      user = session.query(User).options(joinedload(User.Userdetail).joinedload(UserDetail.Type), joinedload(User.Userdetail).joinedload(UserDetail.Usuario_Carrera), joinedload(User.Userdetail).joinedload(UserDetail.Usuario_Carrera).joinedload(UsuarioXcarrera.Carrera)).filter(User.username == us.username).first()
       
       if user and user.password == us.password:
-           return {"status": "success",
+           datos_usuario ={
+               "idUsuario":user.id,
+               "usuario":user.username,
+               "firstname": user.Userdetail.firstname,
+               "dni":user.Userdetail.dni ,
+               "lastname":user.Userdetail.lastname,
+               "email":user.Userdetail.email,
+               "type": user.Userdetail.Type.type,              
+               "carrera": user.Userdetail.Usuario_carrera.Carrera.name
+           } 
+           
+           return {"status":"success",
                    "token": "qwelkrlñqwkrlñqwkerñlkjwn",
-                   "user": user ,
+                   "user": datos_usuario,
                    "message":"User logged in successfully!"}
       else:
            return {"message": "Invald username or password"}
@@ -43,9 +54,10 @@ def crear_usuario(user: InputUser):
            if validate_email(user.email):            
              usuNuevo = User(user.username, user.password)
              usuDetailNuevo = UserDetail (user.dni,user.firstname,user.lastname,user.email,user.type)             
-             usuarioxcarreranuevo = UsuarioXcarrera(user.id_carrera , user.fecha_inicio)
-             usuDetailNuevo.relaUserdetailusuarioxcarrera.append(usuarioxcarreranuevo)
-             usuNuevo.relaUserdetail=usuDetailNuevo
+             usuarioxcarreranuevo = UsuarioXcarrera(user.id_carrera )
+
+             usuDetailNuevo.Usuario_carrera.append(usuarioxcarreranuevo)
+             usuNuevo.Userdetail=usuDetailNuevo
              session.add(usuNuevo)
              session.commit()
             
@@ -91,7 +103,7 @@ def crear_type(type :Imputtype ):
 @career.post("/Careers/new")
 def crear_Career (carerr: Imputcareer):
     try:
-        careernueva = Career(carerr.name, carerr.costo_mensual, carerr.duracion_meses)
+        careernueva = Career(carerr.name, carerr.costo_mensual, carerr.duracion_meses,carerr.inicio_cursado )
         session.add(careernueva)
         session.commit()
         return "carrera creada"
