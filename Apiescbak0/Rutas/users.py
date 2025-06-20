@@ -18,21 +18,23 @@ type = APIRouter()
 @user.post("/users/login")
 def login_user(us: InputLogin):
    try:
-      user = session.query(User).options(joinedload(User.Userdetail).joinedload(UserDetail.Type), joinedload(User.Userdetail).joinedload(UserDetail.Usuario_Carrera), joinedload(User.Userdetail).joinedload(UserDetail.Usuario_Carrera).joinedload(UsuarioXcarrera.Carrera)).filter(User.username == us.username).first()
-      
+      user = session.query(User).options(
+      joinedload(User.Userdetail).joinedload(UserDetail.Type),
+      joinedload(User.Userdetail).joinedload(UserDetail.Usuario_carrera).joinedload(UsuarioXcarrera.Carrera)
+      ).filter(User.username == us.username).first()
       if user and user.password == us.password:
-           datos_usuario ={
-               "idUsuario":user.id,
-               "usuario":user.username,
-               "firstname": user.Userdetail.firstname,
-               "dni":user.Userdetail.dni ,
-               "lastname":user.Userdetail.lastname,
-               "email":user.Userdetail.email,
-               "type": user.Userdetail.Type.type,              
-               "carrera": user.Userdetail.Usuario_carrera.Carrera.name
-           } 
-           
-           return {"status":"success",
+          datos_usuario = {
+          "idUsuario": user.id,
+          "usuario": user.username,
+          "firstname": user.Userdetail.firstname,
+          "dni": user.Userdetail.dni,
+          "lastname": user.Userdetail.lastname,
+          "email": user.Userdetail.email,
+          "type": user.Userdetail.Type.type,
+          "carreras": [rel.Carrera.name for rel in user.Userdetail.Usuario_carrera]
+          }
+
+          return {"status":"success",
                    "token": "qwelkrlñqwkrlñqwkerñlkjwn",
                    "user": datos_usuario,
                    "message":"User logged in successfully!"}
@@ -228,3 +230,22 @@ def obtener_usuarios1():
             status_code=500, content={"detail": "Error al obtener usuarios"}
         )
 # endregion
+
+
+
+""" user = session.query(User).options(joinedload(User.Userdetail).joinedload(UserDetail.Type), joinedload(User.Userdetail).joinedload(UserDetail.Usuario_carrera), joinedload(User.Userdetail).joinedload(UserDetail.Usuario_carrera).joinedload(UsuarioXcarrera.Carrera)).filter(User.username == us.username).first()
+      
+      if user and user.password == us.password:
+           datos_usuario ={
+               "idUsuario":user.id,
+               "usuario":user.username,
+               "firstname": user.Userdetail.firstname,
+               "dni":user.Userdetail.dni ,
+               "lastname":user.Userdetail.lastname,
+               "email":user.Userdetail.email,
+               "type": user.Userdetail.Type.type,              
+               "carrera": user.Userdetail.Usuario_carrera.Carrera.name
+           } """
+      
+     
+           
