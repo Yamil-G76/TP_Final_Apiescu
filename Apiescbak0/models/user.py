@@ -5,75 +5,62 @@ from sqlalchemy.orm import sessionmaker, relationship
 from pydantic import BaseModel, EmailStr
 import datetime
 
-
 # region clases base
+
+# region usuario , usuarioDetail , type 
 class User(Base):
    __tablename__ = "usuarios"
 
    id = Column("id", Integer, primary_key=True)
    username = Column("username", String(50),nullable=False, unique=True )
    password = Column("password", String)
-   email = Column("email", String(80), nullable=False, unique=True)
    id_userdetail = Column("id_userdetail", Integer, ForeignKey("userdetails.id"))
-  # id_career= Column("id_career", Integer, ForeignKey("carreras.id"), nullable=True ,default=None)
-
- #  relaUserCareer = relationship("Career", backref="relaCareerUser")
-   relaUserdetail = relationship("UserDetail", backref="user", uselist=False)
-
-   relaUserPayments= relationship("Payment", uselist=True, back_populates="relaPaymentUser")
  
-   def __init__(self, username, password, email):
+   Userdetail = relationship("UserDetail", backref="user", uselist=False)
+
+   
+ 
+   def __init__(self, username, password):
        self.username = username
        self.password = password
-       self.email = email
+  #_________________________________________________________________________________________________________________
 
-    #_________________________________________________________________________________________________________________
+
+#______________________________________________________________________
+class Type (Base):
+   __tablename__ = "types"
+   id=Column("id", Integer, primary_key=True)
+   type = Column("type", String)
+
+   def __init__(self,type):
+   
+      self.type =type
+
+# endregion
+
+
+# region pagos
 class Payment (Base) :
    
    __tablename__ ="pagos"
 
    id = Column("id", Integer, primary_key=True)
-   id_career =Column("id_career", Integer , ForeignKey("carreras.id") )
-   id_user = Column ("id_user" , Integer , ForeignKey("usuarios.id"))
+   id_usuarioxcarrera = Column ("id_usuarioxcarrera" , Integer , ForeignKey("usuarioxcarrera.id"))
    amount = Column("amount", Integer)
    afect_moth = Column("afect_month", DateTime)
    created_at = Column("created_at", DateTime ,default=datetime.datetime.now() )
 
-   relaPaymentUser=relationship("User", uselist=False , back_populates="relaUserPayments")
-   relaPaymentCareer = relationship("Career", uselist=False,backref= "relaUserCareer")
+   Usuarioxcarrera=relationship("UsuarioXcarrera" , back_populates="Payment")
 
-   def __init__(self,career_id,user_id,amount,afect_mount):
-     self.career_id = career_id 
-     self.user_id = user_id
+   def __init__(self,id_usuarioxcarrera,amount,afect_mount):
+     self.id_usuarioxcarrera = id_usuarioxcarrera
      self.amount= amount
      self.afect_mount = afect_mount
 
-#_________________________________________________________________________________________________________________________
-class Career (Base): 
-    __tablename__= "carreras"
-    id = Column("id", Integer, primary_key=True)
-    name = Column("name",String(50) )
-    
-    def __init__(self,name): 
-     self.name = name
+# endregion 
 
 
-#____________________________________________________________________________________________________________________------
-
-class Materia(Base):
-   __tablename__ = "materias"
-
-   id = Column("id", Integer, primary_key=True)
-   name = Column("name", String )
-   status = Column("status", String)
-
-   
-   def __init__(self, name, status, ID_User):
-       self.name = name
-       self.status = status
-       self.Id_User = ID_User
-
-#______________________________________________________________________________________________________________________-
+# region carrera y materia
 class UserDetail(Base):
 
    __tablename__ = "userdetails"
@@ -83,13 +70,66 @@ class UserDetail(Base):
    dni = Column("dni", Integer)
    firstname = Column("firstname", String)
    lastname = Column("lastname", String)
-   type = Column("type", String)
+   email = Column("email", String(80), nullable=False, unique=True)
+   id_type = Column("id_type", Integer ,  ForeignKey("types.id"))
 
-   def __init__(self, dni, firstname, lastname, type):
+
+   Type= relationship("Type", uselist=False, backref="Userdetail")
+   Usuario_carrera=relationship("UsuarioXcarrera",uselist=True, back_populates="Userdetail")
+
+
+
+   def __init__(self, dni, firstname, lastname, email,id_type):
        self.dni = dni
        self.firstname = firstname
        self.lastname = lastname
-       self.type = type
+       self.email=email
+       self.id_type =id_type
+
+
+#_________________________________________________________________________________-
+class UsuarioXcarrera (Base):
+   __tablename__="usuarioxcarrera"
+   id = Column("id", Integer, primary_key=True)
+   id_userdetail = Column("id_userdetail", Integer ,  ForeignKey("userdetails.id"))
+   id_carrera = Column("id_carrera", Integer ,  ForeignKey("carreras.id"))
+ 
+
+   Userdetail=relationship("UserDetail", uselist=False, back_populates="Usuario_carrera")
+   Carrera = relationship("Carrera",uselist=False, back_populates="Usuariosxcarrera")
+   Payment =relationship("Payment" , back_populates="Usuarioxcarrera")
+
+   def __init__(self,id_carrera,id_userdetail =None):
+      self.id_carrera = id_carrera    
+      if id_userdetail:
+       self.id_userdetail = id_userdetail
+
+
+
+#_________________________________________________________________________________________________________________________
+
+class Career (Base): 
+    __tablename__= "carreras"
+    id = Column("id", Integer, primary_key=True)
+    name = Column("name",String(50) )
+    costo_mensual = Column("costo_mensual" , Integer) 
+    duracion_en_meses = Column("duracion_en_meses" , Integer) 
+    inicio_cursado = Column("inicio_cursado" , DateTime)
+    Usuariosxcarrera = relationship("UsuarioXcarrera",back_populates="Carrera")
+
+    def __init__(self,name,costo_mensual,duracion_en_meses, inicio_cursado): 
+     self.name = name
+     self.costo_mensual= costo_mensual
+     self.duracion_en_meses = duracion_en_meses
+     inicio_cursado = inicio_cursado
+   
+
+#____________________________________________________________________________________________________________________------
+
+
+
+#______________________________________________________________________________________________________________________-
+# endregion
 
 # endregion
 
@@ -105,13 +145,13 @@ session = Session()
 
 # region Basemodel 
 
-class ImputMaterias(BaseModel):
-    name:str
-    status:str
+class ImputUsuarioxcarrera(BaseModel):
+   id_user : int
+   id_carrera: int
+   
 
-
-#class GetMateriaByID(BaseModel):
- 
+class Imputtype(BaseModel):
+   type : str
 
 class InputUser(BaseModel):
    username: str
@@ -120,7 +160,8 @@ class InputUser(BaseModel):
    dni: int
    firstname: str
    lastname: str
-   type :str
+   type :int
+   id_carrera: int
 
    
 class InputLogin(BaseModel):
@@ -130,79 +171,16 @@ class InputLogin(BaseModel):
 
 class Imputcareer(BaseModel):
    name :str
-
+   costo_mensual : int
+   duracion_meses : int
+   inicio_cursado :datetime.date
 
 class ImputPayment(BaseModel):
-   id_career : int
-   id_user :int
+   id_usuarioxcarrera :int
    amount :int
    afect_mount:datetime.date
 
 # endregion
-
-"""class InputUserChanges(BaseModel):
-   username: str
-   email: EmailStr
-   password: str
-   dni :Integer
-   firstName :str
-   lastName :str
-   type :str
-   relauserdetail : User.relaUserdetail.
-   
-     
-class InputUserChanges(BaseModel):
-   username: str
-   email: EmailStr
-   password: str 
-   
-
-
-   @user.put("/users/dniChange")
-def dni_update(usrToChange: InputUserChanges):
-   user = session.query(User).filter(User.username == usrToChange.username).first()
-   if not user:
-       return JSONResponse(
-           status_code=404, content={"detail": "Usuario no encontrado"}
-       )
-   
-   user.relaUserdetail = usrToChange.dni
-   session.commit()
-   session.refresh(user)
-   return {"mensaje": "dni cambiado!!", "usuario": user}
-
-   
-   
-
-@user.put("/users/emailChange")
-def email_update(usrToChange: InputUserChanges):
-   user = session.query(User).filter(User.username == usrToChange.username).first()
-   if not user:
-       return JSONResponse(
-           status_code=404, content={"detail": "Usuario no encontrado"}
-       )
-   EmailExist = session.query(User).filter(User.email == usrToChange.email).first()
-   if EmailExist:
-       return JSONResponse(status_code=404, content={"detail": "Email ya existe"})
-   user.email = usrToChange.email
-   session.commit()
-   session.refresh(user)
-   return {"mensaje": "Email actualizado!!", "usuario": user }
-
-@user.put("/users/passwordChange")
-def password_update(usrToChange: InputUserChanges):
-   user = session.query(User).filter(User.username == usrToChange.username).first()
-   if not user:
-       return JSONResponse(
-           status_code=404, content={"detail": "Usuario no encontrado"}
-       )
-   user.password = usrToChange.password
-   session.commit()
-   session.refresh(user)
-   return {"mensaje": "Password cambiada!!", "usuario": user}
-
-
-   """
 
 
    

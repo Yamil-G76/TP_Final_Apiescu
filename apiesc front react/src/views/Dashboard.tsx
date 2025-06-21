@@ -6,54 +6,60 @@ function Dashboard() {
 const user = JSON.parse(userLs || "{}")
 const firstname = user.firstname
 const type = user.type
-const lastname = user.lastname
-const dni = user.dni
+
 console.log(user) 
 
 function logout (){
  localStorage.removeItem("user")
-localStorage.removeItem("token")
+ localStorage.removeItem("token")
  navigate("/login")
   }
 
+  return (
+    <div style={pageWrapperStyle}>
+      {/* Espacio para encabezado */}
+      <div style={headerPlaceholderStyle}>
+        {/* Acá podés poner luego tu componente Header */}
+      </div>
 
-      
-
-
- return (
-    <div style={dashboardContainerStyle}>
-     
+      {/* Contenido centrado */}
+      <div style={cardStyle}>
         <div style={welcomeTextStyle}>
-          Bienvenido {type} {firstname}
+          Bienvenido {type} {firstname} a tu dashboard
         </div>
 
         <div style={dividerStyle}></div>
 
-        <div style={infoTextStyle}>Tu apellido es: {lastname}</div>
-        <div style={infoTextStyle}>Tu DNI es: {dni}</div>
-
-        <button
-          style={
-            buttonStyle
-          }
-  
-          onClick={logout}
-        >
+        <button style={buttonStyle} onClick={logout}>
           Cerrar sesión
         </button>
-  
+      </div>
     </div>
   );
 };
+  
 
-const dashboardContainerStyle: React.CSSProperties = {
+const pageWrapperStyle: React.CSSProperties = {
   minHeight: "100vh",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
+  flexDirection: "column",
   backgroundColor: "#121212",
   fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  padding: "1rem",
+};
+
+const headerPlaceholderStyle: React.CSSProperties = {
+  height: "60px", // o el alto que tendrá tu Header
+  backgroundColor: "#1a1a1a",
+  borderBottom: "1px solid #2a2a2a",
+};
+
+const cardStyle: React.CSSProperties = {
+  flexGrow: 1,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "2rem",
 };
 
 const welcomeTextStyle: React.CSSProperties = {
@@ -61,18 +67,15 @@ const welcomeTextStyle: React.CSSProperties = {
   fontWeight: "600",
   marginBottom: "1rem",
   color: "#ffffff",
+  textAlign: "center",
 };
 
 const dividerStyle: React.CSSProperties = {
+  width: "100%",
+  maxWidth: "400px",
   height: "1px",
   backgroundColor: "#444",
   margin: "1rem 0",
-};
-
-const infoTextStyle: React.CSSProperties = {
-  fontSize: "1rem",
-  marginBottom: "0.75rem",
-  color: "#cccccc",
 };
 
 const buttonStyle: React.CSSProperties = {
@@ -83,9 +86,8 @@ const buttonStyle: React.CSSProperties = {
   padding: "0.75rem 1.5rem",
   borderRadius: "6px",
   fontSize: "1rem",
-  transition: "background-color 0.3s ease, transform 0.2s ease",
+  transition: "background-color 0.3s ease",
   cursor: "pointer",
-  marginTop: "1.5rem",
 };
 
 
